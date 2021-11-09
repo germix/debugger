@@ -1,0 +1,10 @@
+.idea
+.vscode
+
+
+/bin
+/lib
+/proj/*.pro.*
+/build-*
+
+*.bat
