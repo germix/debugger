@@ -50,7 +50,11 @@ void MainWindow::slotAction()
 {
 	QAction* action = qobject_cast<QAction*>(sender());
 
-	if(action == ui->actionLoadExecutable)
+	if(action == ui->actionExit)
+	{
+		close();
+	}
+	else if(action == ui->actionLoadExecutable)
 	{
 		QString filters;
 
