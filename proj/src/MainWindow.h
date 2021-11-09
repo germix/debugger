@@ -24,6 +24,9 @@ private:
 	void updateTitle();
 	void loadExecutable(const QString& fileName);
 	void unloadExecutable();
+
+private:
+	void closeEvent(QCloseEvent* e);
 private slots:
 	void slotAction();
 };

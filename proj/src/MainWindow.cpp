@@ -2,18 +2,40 @@
 #include "ui_MainWindow.h"
 #include <QFileInfo>
 #include <QFileDialog>
+#include <QSettings>
 
 #define TITLE "Debugger"
+#define SETTINGS_APPLICATION "Debugger"
+#define SETTINGS_ORGANIZATION "Germix"
 
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+	
+	QSettings s(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+
+	//
+	// Restore state
+	//
+	restoreGeometry(s.value("WindowGeometry").toByteArray());
+	restoreState(s.value("WindowState").toByteArray());
+
+	//
+	// Load last executable
+	//
+	loadExecutable(s.value("Executable").toString());
 }
 
 MainWindow::~MainWindow()
 {
+	QSettings s(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+
+	// Save state
+	s.setValue("WindowState", saveState());
+	s.setValue("WindowGeometry", saveGeometry());
+
 	delete ui;
 }
 
@@ -36,14 +58,30 @@ void MainWindow::loadExecutable(const QString& fileName)
 	if(fi.exists())
 	{
 		currentExecutable = fileName;
+		lastDirectory = QFileInfo(fileName).absoluteDir().absolutePath();
+
 		updateTitle();
 	}
 }
 
 void MainWindow::unloadExecutable()
 {
-	currentExecutable.clear();
-	updateTitle();
+	if(!currentExecutable.isEmpty())
+	{
+		// Clear executable
+		currentExecutable.clear();
+
+		// Update title
+		updateTitle();
+	}
+}
+
+void MainWindow::closeEvent(QCloseEvent* e)
+{
+	QSettings s(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+
+	// Save executable
+	s.setValue("Executable", currentExecutable);
 }
 
 void MainWindow::slotAction()
@@ -68,7 +106,6 @@ void MainWindow::slotAction()
 		if(!fileName.isEmpty())
 		{
 			loadExecutable(fileName);
-			lastDirectory = QFileInfo(fileName).absoluteDir().absolutePath();
 		}
 	}
 }
