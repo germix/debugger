@@ -14,11 +14,18 @@ class MainWindow : public QMainWindow
 private:
 	Ui::MainWindow* ui;
 
+	QString lastDirectory;
+	QString currentExecutable;
 public:
 	explicit MainWindow(QWidget* parent = 0);
 	~MainWindow();
 public:
-
+private:
+	void updateTitle();
+	void loadExecutable(const QString& fileName);
+	void unloadExecutable();
+private slots:
+	void slotAction();
 };
 
 #endif // MAINWINDOW_H

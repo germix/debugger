@@ -55,3 +55,6 @@ HEADERS += \
 
 FORMS += \
         src/MainWindow.ui
+
+RESOURCES += \
+    res/resource.qrc
