@@ -5,20 +5,24 @@
 #include <QDir>
 #include <QFileInfo>
 
+#include "DebuggerHelper.h"
 #include "utils/GetFileNameFromHandle.h"
 
 #define ASSERT(x) Q_ASSERT(x)
+#define WARNING(x) qDebug() << "[WARNING] " << x
 
 Debugger::Debugger(QObject* parent)
 	: QThread(parent)
 {
-	hProcess = INVALID_HANDLE_VALUE;
-	dwProcessId = 0;
+	hDebuggeeProcess = INVALID_HANDLE_VALUE;
+	dwDebuggeeProcessId = 0;
 
 	isProgramActive = false;
 	isProgramRunning = false;
 
 	continueEvent = CreateEventW(NULL, false, false, L"ContinueEvent");
+
+	DebuggerHelper::init();
 }
 
 Debugger::~Debugger()
@@ -64,6 +68,11 @@ void Debugger::programContinue()
 	PulseEvent(continueEvent);
 }
 
+bool Debugger::isWow64() const
+{
+	return DebuggerHelper::isWow64Process(hDebuggeeProcess);
+}
+
 void Debugger::run()
 {
 	isProgramActive = true;
@@ -97,8 +106,8 @@ void Debugger::run()
 		return;
 	}
 
-	hProcess = pi.hProcess;
-	dwProcessId = pi.dwProcessId;
+	hDebuggeeProcess = pi.hProcess;
+	dwDebuggeeProcessId = pi.dwProcessId;
 
 	bContinueDebugging = true;
 
@@ -226,8 +235,22 @@ DWORD Debugger::OnExceptionDebugEvent(const DEBUG_EVENT& debugEvent)
 		SuspendThread(hThread);
 
 		// Get thread context
+#ifdef _AMD64_
+		if(isWow64())
+		{
+			wow64Context.ContextFlags = CONTEXT_FULL;
+
+			DebuggerHelper::pfnWow64GetThreadContext(hThread, &wow64Context);
+		}
+		else
+		{
+			context.ContextFlags = CONTEXT_FULL;
+			GetThreadContext(hThread, &context);
+		}
+#else
 		context.ContextFlags = CONTEXT_FULL;
 		GetThreadContext(hThread, &context);
+#endif
 
 		isProgramRunning = false;
 		emit onBreak();
@@ -376,7 +399,7 @@ DWORD Debugger::OnOutputDebugStringEvent(const DEBUG_EVENT& debugEvent)
 	WCHAR* message = new WCHAR[debugString.nDebugStringLength];
 
 	ReadProcessMemory(
-		hProcess,						// HANDLE to Debuggee
+		hDebuggeeProcess,				// HANDLE to Debuggee
 		debugString.lpDebugStringData,	// Target process' valid pointer
 		message,						// Copy to this address space
 		debugString.nDebugStringLength,

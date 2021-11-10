@@ -29,8 +29,8 @@ class Debugger : public QThread
 
 	QString					program;
 
-	HANDLE					hProcess;
-	DWORD					dwProcessId;
+	HANDLE					hDebuggeeProcess;
+	DWORD					dwDebuggeeProcessId;
 	QHash<LPVOID, QString>	dllNameMap;
 
 	BOOL					bContinueDebugging;
@@ -42,7 +42,11 @@ public:
 
 	HANDLE					continueEvent;
 
-	CONTEXT					context;
+	union
+	{
+		CONTEXT				context;
+		WOW64_CONTEXT		wow64Context;
+	};
 public:
 	explicit Debugger(QObject* parent = nullptr);
 	~Debugger();
@@ -51,6 +55,8 @@ public:
 	void programKill();
 	void programBreak();
 	void programContinue();
+	
+	bool isWow64() const;
 private:
 	void run();
 

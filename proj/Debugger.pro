@@ -59,7 +59,9 @@ SOURCES += \
     src/utils/GetFileNameFromHandle.cpp \
     src/AboutDialog.cpp \
     src/RegistersPanel.cpp \
-    src/RecentFilesMenu.cpp
+    src/RecentFilesMenu.cpp \
+    src/utils/IsWindowsXP.cpp \
+    src/DebuggerHelper.cpp
 
 HEADERS += \
         src/MainWindow.h \
@@ -67,7 +69,9 @@ HEADERS += \
     src/utils/GetFileNameFromHandle.h \
     src/AboutDialog.h \
     src/RegistersPanel.h \
-    src/RecentFilesMenu.h
+    src/RecentFilesMenu.h \
+    src/utils/IsWindowsXP.h \
+    src/DebuggerHelper.h
 
 FORMS += \
         src/MainWindow.ui \
