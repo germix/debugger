@@ -92,6 +92,7 @@ void MainWindow::updateActions()
 	bool isActive = debugger.isProgramActive;
 	bool isRunning = debugger.isProgramRunning;
 
+	ui->actionLoadExecutable->setEnabled(!isActive);
 	ui->actionRun->setEnabled(hasProgram && !isActive);
 	ui->actionStop->setEnabled(hasProgram && isActive);
 }
