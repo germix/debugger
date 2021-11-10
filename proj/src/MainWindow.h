@@ -50,6 +50,8 @@ private:
 
 private:
 	void closeEvent(QCloseEvent* e);
+	void dropEvent(QDropEvent* e);
+	void dragEnterEvent(QDragEnterEvent* e);
 private slots:
 	void slotAction();
 

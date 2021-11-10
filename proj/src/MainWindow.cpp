@@ -7,6 +7,7 @@
 #include <QPlainTextEdit>
 #include <QDebug>
 #include <QMessageBox>
+#include <QMimeData>
 #include "AboutDialog.h"
 #include "RecentFilesMenu.h"
 #include "RegistersPanel.h"
@@ -186,6 +187,29 @@ void MainWindow::closeEvent(QCloseEvent* e)
 
 	// Save executable
 	s.setValue("Executable", currentExecutable);
+}
+
+void MainWindow::dropEvent(QDropEvent* e)
+{
+	QString s;
+	const QList<QUrl> urls = e->mimeData()->urls();
+
+	if(urls.size() == 1)
+	{
+		s = urls.at(0).toLocalFile();
+
+		loadExecutable(s);
+
+		e->acceptProposedAction();
+	}
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent* e)
+{
+	if(e->mimeData()->hasFormat("text/uri-list"))
+	{
+		e->acceptProposedAction();
+	}
 }
 
 void MainWindow::slotAction()
