@@ -39,6 +39,12 @@ TARGET = Debugger
 }
 
 #---------------------------------------------------------------------------------------------------
+# Libraries
+#---------------------------------------------------------------------------------------------------
+
+LIBS += libPsapi
+
+#---------------------------------------------------------------------------------------------------
 # Destination folder
 #---------------------------------------------------------------------------------------------------
 DESTDIR = ../bin
@@ -48,10 +54,14 @@ DESTDIR = ../bin
 #---------------------------------------------------------------------------------------------------
 SOURCES += \
         src/main.cpp \
-        src/MainWindow.cpp
+        src/MainWindow.cpp \
+    src/Debugger.cpp \
+    src/utils/GetFileNameFromHandle.cpp
 
 HEADERS += \
-        src/MainWindow.h
+        src/MainWindow.h \
+    src/Debugger.h \
+    src/utils/GetFileNameFromHandle.h
 
 FORMS += \
         src/MainWindow.ui
