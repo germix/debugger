@@ -4,5 +4,7 @@
         <file>icons/exit.png</file>
         <file>icons/run.png</file>
         <file>icons/stop.png</file>
+        <file>icons/about.png</file>
+        <file>MainImage.png</file>
     </qresource>
 </RCC>

@@ -56,15 +56,20 @@ SOURCES += \
         src/main.cpp \
         src/MainWindow.cpp \
     src/Debugger.cpp \
-    src/utils/GetFileNameFromHandle.cpp
+    src/utils/GetFileNameFromHandle.cpp \
+    src/AboutDialog.cpp
 
 HEADERS += \
         src/MainWindow.h \
     src/Debugger.h \
-    src/utils/GetFileNameFromHandle.h
+    src/utils/GetFileNameFromHandle.h \
+    src/AboutDialog.h
 
 FORMS += \
-        src/MainWindow.ui
+        src/MainWindow.ui \
+    src/AboutDialog.ui
 
 RESOURCES += \
     res/resource.qrc
+
+win32:RC_FILE = res/resource_win32.rc

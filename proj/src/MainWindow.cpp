@@ -6,6 +6,7 @@
 #include <QDockWidget>
 #include <QPlainTextEdit>
 #include <QDebug>
+#include "AboutDialog.h"
 
 #define TITLE "Debugger"
 #define SETTINGS_APPLICATION "Debugger"
@@ -180,6 +181,10 @@ void MainWindow::slotAction()
 	else if(action == ui->actionStop)
 	{
 		debugger.programKill();
+	}
+	else if(action == ui->actionAbout)
+	{
+		AboutDialog().exec();
 	}
 }
 
