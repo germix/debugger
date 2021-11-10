@@ -6,6 +6,7 @@
 namespace Ui {
 class MainWindow;
 }
+class RecentFilesMenu;
 class QPlainTextEdit;
 class RegistersPanel;
 
@@ -23,10 +24,13 @@ private:
 
 	QHash<QDockWidget*, QString> docks;
 
+	RecentFilesMenu*				recentFiles;
+
 	Debugger						debugger;
 
 	QPlainTextEdit*					logWidget;
 	RegistersPanel*					registersPanel;
+
 public:
 	explicit MainWindow(QWidget* parent = 0);
 	~MainWindow();
@@ -48,11 +52,15 @@ private:
 	void closeEvent(QCloseEvent* e);
 private slots:
 	void slotAction();
+
 	void slotDebugger_log(const QString& s);
 	void slotDebugger_starting();
 	void slotDebugger_stopped();
 	void slotDebugger_break();
 	void slotDebugger_continue();
+
+	void slotRecentFiles_fileTriggered(const QString& fileName);
+
 };
 
 #endif // MAINWINDOW_H

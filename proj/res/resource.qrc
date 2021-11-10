@@ -8,5 +8,6 @@
         <file>MainImage.png</file>
         <file>icons/continue.png</file>
         <file>icons/pause.png</file>
+        <file>icons/broom.png</file>
     </qresource>
 </RCC>

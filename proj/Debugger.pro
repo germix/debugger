@@ -58,14 +58,16 @@ SOURCES += \
     src/Debugger.cpp \
     src/utils/GetFileNameFromHandle.cpp \
     src/AboutDialog.cpp \
-    src/RegistersPanel.cpp
+    src/RegistersPanel.cpp \
+    src/RecentFilesMenu.cpp
 
 HEADERS += \
         src/MainWindow.h \
     src/Debugger.h \
     src/utils/GetFileNameFromHandle.h \
     src/AboutDialog.h \
-    src/RegistersPanel.h
+    src/RegistersPanel.h \
+    src/RecentFilesMenu.h
 
 FORMS += \
         src/MainWindow.ui \

@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include "AboutDialog.h"
+#include "RecentFilesMenu.h"
 #include "RegistersPanel.h"
 
 #define TITLE "Debugger"
@@ -24,6 +25,15 @@ MainWindow::MainWindow(QWidget* parent)
 
 	initToolbar();
 	initPanels();
+
+	//
+	// Recent files menu
+	//
+	recentFiles = new RecentFilesMenu(20, 10, tr("Recent files"), QIcon(":/icons/broom.png"));
+	connect(recentFiles, SIGNAL(onFileTriggered(QString)), this, SLOT(slotRecentFiles_fileTriggered(QString)));
+	recentFiles->restoreState(s.value("RecentFiles").toByteArray());
+	ui->menu_File->insertMenu(ui->actionExit, recentFiles);
+	ui->menu_File->insertSeparator(ui->actionExit);
 
 	//
 	// Restore state
@@ -44,6 +54,9 @@ MainWindow::~MainWindow()
 	// Save state
 	s.setValue("WindowState", saveState());
 	s.setValue("WindowGeometry", saveGeometry());
+	
+	// Save recent files
+	s.setValue("RecentFiles", recentFiles->saveState());
 
 	delete ui;
 }
@@ -69,6 +82,9 @@ void MainWindow::loadExecutable(const QString& fileName)
 		currentExecutable = fileName;
 		lastDirectory = QFileInfo(fileName).absoluteDir().absolutePath();
 
+		// Remove from recent files
+		recentFiles->removeFile(currentExecutable);
+
 		// Update title and actions
 		updateTitle();
 		updateActions();
@@ -79,6 +95,9 @@ void MainWindow::unloadExecutable()
 {
 	if(!currentExecutable.isEmpty())
 	{
+		// Add to recent files
+		recentFiles->addFile(currentExecutable);
+
 		// Clear executable
 		currentExecutable.clear();
 
@@ -242,4 +261,9 @@ void MainWindow::slotDebugger_break()
 void MainWindow::slotDebugger_continue()
 {
 	updateActions();
+}
+
+void MainWindow::slotRecentFiles_fileTriggered(const QString& fileName)
+{
+	loadExecutable(fileName);
 }
