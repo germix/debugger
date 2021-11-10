@@ -6,6 +6,7 @@
 #include <QDockWidget>
 #include <QPlainTextEdit>
 #include <QDebug>
+#include <QMessageBox>
 #include "AboutDialog.h"
 
 #define TITLE "Debugger"
@@ -145,6 +146,12 @@ QDockWidget* MainWindow::createDockPanel(QWidget* widget, const QString& name, c
 
 void MainWindow::closeEvent(QCloseEvent* e)
 {
+	if(debugger.isProgramActive)
+	{
+		e->ignore();
+		QMessageBox::information(this, tr("Info"), tr("Can't exit when the debugger is active"), QMessageBox::Ok);
+		return;
+	}
 	QSettings s(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
 
 	// Save executable
