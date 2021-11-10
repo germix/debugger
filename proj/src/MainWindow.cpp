@@ -96,6 +96,8 @@ void MainWindow::updateActions()
 	ui->actionLoadExecutable->setEnabled(!isActive);
 	ui->actionRun->setEnabled(hasProgram && !isActive);
 	ui->actionStop->setEnabled(hasProgram && isActive);
+	ui->actionInterrupt->setEnabled(hasProgram && isActive && isRunning);
+	ui->actionContinue->setEnabled(hasProgram && isActive && !isRunning);
 }
 
 void MainWindow::initToolbar()
@@ -106,9 +108,11 @@ void MainWindow::initToolbar()
 
 void MainWindow::initPanels()
 {
-	connect(&debugger, SIGNAL(starting()), this, SLOT(slotDebugger_starting()));
-	connect(&debugger, SIGNAL(stopped()), this, SLOT(slotDebugger_stopped()));
-	connect(&debugger, SIGNAL(log(QString)), this, SLOT(slotDebugger_log(QString)));
+	connect(&debugger, SIGNAL(onLog(QString)), this, SLOT(slotDebugger_log(QString)));
+	connect(&debugger, SIGNAL(onStarting()), this, SLOT(slotDebugger_starting()));
+	connect(&debugger, SIGNAL(onStopped()), this, SLOT(slotDebugger_stopped()));
+	connect(&debugger, SIGNAL(onBreak()), this, SLOT(slotDebugger_break()));
+	connect(&debugger, SIGNAL(onContinue()), this, SLOT(slotDebugger_continue()));
 
 	//
 	// Log panel
@@ -190,10 +194,26 @@ void MainWindow::slotAction()
 	{
 		debugger.programKill();
 	}
+	else if(action == ui->actionInterrupt)
+	{
+		debugger.programBreak();
+	}
+	else if(action == ui->actionContinue)
+	{
+		debugger.programContinue();
+	}
 	else if(action == ui->actionAbout)
 	{
 		AboutDialog().exec();
 	}
+}
+
+void MainWindow::slotDebugger_log(const QString& s)
+{
+	QTextCursor textCursor = QTextCursor(logWidget->document());
+	textCursor.movePosition(QTextCursor::End);
+	logWidget->setTextCursor(textCursor);
+	logWidget->insertPlainText(s);
 }
 
 void MainWindow::slotDebugger_starting()
@@ -207,10 +227,12 @@ void MainWindow::slotDebugger_stopped()
 	updateActions();
 }
 
-void MainWindow::slotDebugger_log(const QString& s)
+void MainWindow::slotDebugger_break()
 {
-	QTextCursor textCursor = QTextCursor(logWidget->document());
-	textCursor.movePosition(QTextCursor::End);
-	logWidget->setTextCursor(textCursor);
-	logWidget->insertPlainText(s);
+	updateActions();
+}
+
+void MainWindow::slotDebugger_continue()
+{
+	updateActions();
 }

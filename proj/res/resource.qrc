@@ -6,5 +6,7 @@
         <file>icons/stop.png</file>
         <file>icons/about.png</file>
         <file>MainImage.png</file>
+        <file>icons/continue.png</file>
+        <file>icons/pause.png</file>
     </qresource>
 </RCC>

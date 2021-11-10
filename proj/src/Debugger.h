@@ -2,7 +2,19 @@
 #define DEBUGGER_H
 #include <QThread>
 #include <QHash>
+#include <QVector>
 #include <windows.h>
+
+struct ProcessInfo
+{
+public:
+	QString		fileName;
+	HANDLE		hProcess;
+	DWORD		dwProcessId;
+	LPVOID		lpBaseOfImage;
+	bool 		bKernelBP;
+	UINT64		dwEntryPoint;
+};
 
 class Debugger : public QThread
 {
@@ -19,14 +31,22 @@ public:
 	BOOL					isProgramActive;
 	bool					isProgramRunning;
 
+	QVector<ProcessInfo>	processes;
+
+	HANDLE					continueEvent;
 public:
 	explicit Debugger(QObject* parent = nullptr);
 	~Debugger();
 public:
 	bool programRun(const QString& fileName);
 	void programKill();
+	void programBreak();
+	void programContinue();
 private:
 	void run();
+
+	ProcessInfo* findProcess(DWORD pid);
+
 	DWORD OnExceptionDebugEvent(const DEBUG_EVENT& debugEvent);
 	DWORD OnCreateThreadDebugEvent(const DEBUG_EVENT& debugEvent);
 	DWORD OnCreateProcessDebugEvent(const DEBUG_EVENT& debugEvent);
@@ -37,9 +57,11 @@ private:
 	DWORD OnOutputDebugStringEvent(const DEBUG_EVENT& debugEvent);
 	DWORD OnRipEvent(const DEBUG_EVENT& debugEvent);
 signals:
-	void starting();
-	void stopped();
-	void log(const QString& s);
+	void onLog(const QString& s);
+	void onStarting();
+	void onStopped();
+	void onBreak();
+	void onContinue();
 
 public slots:
 };

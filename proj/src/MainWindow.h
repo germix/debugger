@@ -46,9 +46,11 @@ private:
 	void closeEvent(QCloseEvent* e);
 private slots:
 	void slotAction();
+	void slotDebugger_log(const QString& s);
 	void slotDebugger_starting();
 	void slotDebugger_stopped();
-	void slotDebugger_log(const QString& s);
+	void slotDebugger_break();
+	void slotDebugger_continue();
 };
 
 #endif // MAINWINDOW_H

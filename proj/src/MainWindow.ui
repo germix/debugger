@@ -68,6 +68,8 @@
    <addaction name="separator"/>
    <addaction name="actionRun"/>
    <addaction name="actionStop"/>
+   <addaction name="actionInterrupt"/>
+   <addaction name="actionContinue"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionLoadExecutable">
@@ -113,6 +115,24 @@
    </property>
    <property name="text">
     <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionInterrupt">
+   <property name="icon">
+    <iconset resource="../res/resource.qrc">
+     <normaloff>:/icons/pause.png</normaloff>:/icons/pause.png</iconset>
+   </property>
+   <property name="text">
+    <string>Interrupt</string>
+   </property>
+  </action>
+  <action name="actionContinue">
+   <property name="icon">
+    <iconset resource="../res/resource.qrc">
+     <normaloff>:/icons/continue.png</normaloff>:/icons/continue.png</iconset>
+   </property>
+   <property name="text">
+    <string>Continue</string>
    </property>
   </action>
  </widget>
@@ -187,6 +207,38 @@
   </connection>
   <connection>
    <sender>actionAbout</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>slotAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>376</x>
+     <y>194</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionInterrupt</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>slotAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>376</x>
+     <y>194</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionContinue</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>slotAction()</slot>

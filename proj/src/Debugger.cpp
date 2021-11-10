@@ -7,6 +7,8 @@
 
 #include "utils/GetFileNameFromHandle.h"
 
+#define ASSERT(x) Q_ASSERT(x)
+
 Debugger::Debugger(QObject* parent)
 	: QThread(parent)
 {
@@ -15,10 +17,13 @@ Debugger::Debugger(QObject* parent)
 
 	isProgramActive = false;
 	isProgramRunning = false;
+
+	continueEvent = CreateEventW(NULL, false, false, L"ContinueEvent");
 }
 
 Debugger::~Debugger()
 {
+	CloseHandle(continueEvent);
 }
 
 bool Debugger::programRun(const QString& fileName)
@@ -31,14 +36,39 @@ bool Debugger::programRun(const QString& fileName)
 
 void Debugger::programKill()
 {
-	TerminateProcess(hProcess, 0);
+	for(int i = 0; i < processes.size(); i++)
+	{
+		TerminateProcess(processes[i].hProcess, 0);
+	}
+	PulseEvent(continueEvent);
+}
+
+void Debugger::programBreak()
+{
+	emit onLog("Pause debugging");
+
+	for(int i = 0; i < processes.size(); i++)
+	{
+		ProcessInfo* info = &processes[i];
+
+		if(DebugBreakProcess(info->hProcess))
+		{
+			emit onLog(QString("Process paused (%1)").arg(info->fileName));
+		}
+	}
+}
+
+void Debugger::programContinue()
+{
+	isProgramRunning = false;
+	PulseEvent(continueEvent);
 }
 
 void Debugger::run()
 {
 	isProgramActive = true;
 	isProgramRunning = true;
-	emit starting();
+	emit onStarting();
 
 	DEBUG_EVENT debugEvent = {0};
 
@@ -63,7 +93,7 @@ void Debugger::run()
 		&pi);									// lpProcessInformation
 	if(!res)
 	{
-		emit stopped();
+		emit onStopped();
 		return;
 	}
 
@@ -119,7 +149,21 @@ void Debugger::run()
 	isProgramActive = false;
 	isProgramRunning = false;
 
-	emit stopped();
+	emit onStopped();
+}
+
+ProcessInfo* Debugger::findProcess(DWORD pid)
+{
+	for(int i = 0; i < processes.size(); i++)
+	{
+		ProcessInfo* info = &processes[i];
+
+		if(info->dwProcessId == pid)
+		{
+			return info;
+		}
+	}
+	return nullptr;
 }
 
 DWORD Debugger::OnExceptionDebugEvent(const DEBUG_EVENT& debugEvent)
@@ -134,40 +178,55 @@ DWORD Debugger::OnExceptionDebugEvent(const DEBUG_EVENT& debugEvent)
 			// First chance: Pass this on to the system.
 			// Last chance: Display an appropriate error.
 
-			emit log("Access violation" "\n");
+			emit onLog("Access violation" "\n");
 			break;
 
 		case EXCEPTION_BREAKPOINT:
 			// First chance: Display the current
 			// instruction and register values.
 
-			emit log("Break point" "\n");
+			emit onLog("Break point" "\n");
 			break;
 
 		case EXCEPTION_DATATYPE_MISALIGNMENT:
 			// First chance: Pass this on to the system.
 			// Last chance: Display an appropriate error.
 
-			emit log("Datatype misalignment" "\n");
+			emit onLog("Datatype misalignment" "\n");
 			break;
 
 		case EXCEPTION_SINGLE_STEP:
 			// First chance: Update the display of the
 			// current instruction and register values.
 
-			emit log("Single step" "\n");
+			emit onLog("Single step" "\n");
 			break;
 
 		case DBG_CONTROL_C:
 			// First chance: Pass this on to the system.
 			// Last chance: Display an appropriate error.
 
-			emit log("Control C" "\n");
+			emit onLog("Control C" "\n");
 			break;
 
 		default:
 			// Handle other exceptions.
+			qDebug("Exception not handled");
 			break;
+	}
+
+	{
+		ProcessInfo* info = findProcess(debugEvent.dwProcessId);
+		ASSERT(info != nullptr);
+
+		isProgramRunning = false;
+		emit onBreak();
+
+		// Wait for continue event
+		WaitForSingleObject(continueEvent, INFINITE);
+		
+		isProgramRunning = true;
+		emit onContinue();
 	}
 	return DBG_CONTINUE;
 }
@@ -183,7 +242,7 @@ DWORD Debugger::OnCreateThreadDebugEvent(const DEBUG_EVENT& debugEvent)
 			debugEvent.dwThreadId,
 			debugEvent.u.CreateThread.lpStartAddress);
 
-	emit log(str + "\n");
+	emit onLog(str + "\n");
 
 	return DBG_CONTINUE;
 }
@@ -191,10 +250,24 @@ DWORD Debugger::OnCreateThreadDebugEvent(const DEBUG_EVENT& debugEvent)
 DWORD Debugger::OnCreateProcessDebugEvent(const DEBUG_EVENT& debugEvent)
 {
 	qDebug("OnCreateProcessDebugEvent");
+	CONST CREATE_PROCESS_DEBUG_INFO* pCreateProcessInfo = &debugEvent.u.CreateProcessInfo;
 
-	QString str = GetFileNameFromHandle(debugEvent.u.CreateProcessInfo.hFile);
+	QString fileName = GetFileNameFromHandle(pCreateProcessInfo->hFile);
 
-	emit log(str + "\n");
+	// Log
+	emit onLog("Process created: " + fileName + "\n");
+
+	//
+	// Create process info
+	//
+	ProcessInfo info;
+	info.fileName = fileName;
+	info.hProcess = pCreateProcessInfo->hProcess;
+	info.dwProcessId = debugEvent.dwProcessId;
+	info.lpBaseOfImage = pCreateProcessInfo->lpBaseOfImage;
+	info.dwEntryPoint = (UINT64)pCreateProcessInfo->lpStartAddress;
+
+	processes.append(info);
 
 	return DBG_CONTINUE;
 }
@@ -209,7 +282,7 @@ DWORD Debugger::OnExitThreadDebugEvent(const DEBUG_EVENT& debugEvent)
 		debugEvent.dwThreadId,
 		debugEvent.u.ExitThread.dwExitCode);
 
-	emit log(str + "\n");
+	emit onLog(str + "\n");
 
 	return DBG_CONTINUE;
 }
@@ -218,14 +291,30 @@ DWORD Debugger::OnExitProcessDebugEvent(const DEBUG_EVENT& debugEvent)
 {
 	qDebug("OnExitProcessDebugEvent");
 
-	QString str;
+	DWORD pid = debugEvent.dwProcessId;
 
-	str += QString().sprintf("Process exited with code:  0x%x",
-		debugEvent.u.ExitProcess.dwExitCode);
+	// Find process info
+	ProcessInfo* info = findProcess(pid);
+	ASSERT(info != nullptr);
 
-	emit log(str + "\n");
+	// Log
+	emit onLog(QString().sprintf("Process '%ls' exited with code:  0x%x\n", info->fileName.constData(), debugEvent.u.ExitProcess.dwExitCode));
 
-	bContinueDebugging = false;
+	// Stop debugging loop if the process is the main process
+	if(info->dwProcessId == pid)
+	{
+		bContinueDebugging = false;
+	}
+
+	// Remove process info
+	for(int i = 0; i < processes.size(); i++)
+	{
+		if(processes[i].dwProcessId == pid)
+		{
+			processes.removeAt(i);
+			break;
+		}
+	}
 
 	return DBG_CONTINUE;
 }
@@ -243,7 +332,7 @@ DWORD Debugger::OnLoadDllDebugEvent(const DEBUG_EVENT& debugEvent)
 	str += dllFileName;
 	str += QString().sprintf(" - Loaded at %p", debugEvent.u.LoadDll.lpBaseOfDll);
 
-	emit log(str + "\n");
+	emit onLog(str + "\n");
 
 	return DBG_CONTINUE;
 }
@@ -256,7 +345,7 @@ DWORD Debugger::OnUnloadDllDebugEvent(const DEBUG_EVENT& debugEvent)
 
 	str += QString().sprintf("DLL '%ls' unloaded.", dllNameMap[debugEvent.u.UnloadDll.lpBaseOfDll].constData());
 
-	emit log(str + "\n");
+	emit onLog(str + "\n");
 
 	return DBG_CONTINUE;
 }
