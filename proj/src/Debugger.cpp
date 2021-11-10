@@ -219,6 +219,16 @@ DWORD Debugger::OnExceptionDebugEvent(const DEBUG_EVENT& debugEvent)
 		ProcessInfo* info = findProcess(debugEvent.dwProcessId);
 		ASSERT(info != nullptr);
 
+		// Open thread
+		HANDLE hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, debugEvent.dwThreadId);
+
+		// Suspend thread
+		SuspendThread(hThread);
+
+		// Get thread context
+		context.ContextFlags = CONTEXT_FULL;
+		GetThreadContext(hThread, &context);
+
 		isProgramRunning = false;
 		emit onBreak();
 
@@ -227,6 +237,12 @@ DWORD Debugger::OnExceptionDebugEvent(const DEBUG_EVENT& debugEvent)
 		
 		isProgramRunning = true;
 		emit onContinue();
+
+		// Resume thread
+		ResumeThread(hThread);
+
+		// Close thread
+		CloseHandle(hThread);
 	}
 	return DBG_CONTINUE;
 }

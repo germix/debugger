@@ -57,17 +57,20 @@ SOURCES += \
         src/MainWindow.cpp \
     src/Debugger.cpp \
     src/utils/GetFileNameFromHandle.cpp \
-    src/AboutDialog.cpp
+    src/AboutDialog.cpp \
+    src/RegistersPanel.cpp
 
 HEADERS += \
         src/MainWindow.h \
     src/Debugger.h \
     src/utils/GetFileNameFromHandle.h \
-    src/AboutDialog.h
+    src/AboutDialog.h \
+    src/RegistersPanel.h
 
 FORMS += \
         src/MainWindow.ui \
-    src/AboutDialog.ui
+    src/AboutDialog.ui \
+    src/RegistersPanel.ui
 
 RESOURCES += \
     res/resource.qrc

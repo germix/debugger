@@ -7,6 +7,7 @@ namespace Ui {
 class MainWindow;
 }
 class QPlainTextEdit;
+class RegistersPanel;
 
 #include "Debugger.h"
 
@@ -25,6 +26,7 @@ private:
 	Debugger						debugger;
 
 	QPlainTextEdit*					logWidget;
+	RegistersPanel*					registersPanel;
 public:
 	explicit MainWindow(QWidget* parent = 0);
 	~MainWindow();

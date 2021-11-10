@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include "AboutDialog.h"
+#include "RegistersPanel.h"
 
 #define TITLE "Debugger"
 #define SETTINGS_APPLICATION "Debugger"
@@ -120,6 +121,12 @@ void MainWindow::initPanels()
 	logWidget = new QPlainTextEdit();
 	logWidget->setReadOnly(true);
 	createDockPanel(logWidget, "log", tr("Log"), "log", true, Qt::BottomDockWidgetArea, Qt::AllDockWidgetAreas);
+
+	//
+	// Registers panel
+	//
+	registersPanel = new RegistersPanel(&debugger);
+	createDockPanel(registersPanel, "registers", tr("Registers"), "registers", true, Qt::BottomDockWidgetArea, Qt::AllDockWidgetAreas);
 }
 
 QDockWidget* MainWindow::createDockPanel(QWidget* widget, const QString& name, const QString& title, const char* rawTitle, bool visible, Qt::DockWidgetArea initialArea, Qt::DockWidgetAreas allowedAreas)

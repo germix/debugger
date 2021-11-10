@@ -16,6 +16,13 @@ public:
 	UINT64		dwEntryPoint;
 };
 
+class RegisterInfo
+{
+public:
+	QString		name;
+	QString		value;
+};
+
 class Debugger : public QThread
 {
 	Q_OBJECT
@@ -34,6 +41,8 @@ public:
 	QVector<ProcessInfo>	processes;
 
 	HANDLE					continueEvent;
+
+	CONTEXT					context;
 public:
 	explicit Debugger(QObject* parent = nullptr);
 	~Debugger();
